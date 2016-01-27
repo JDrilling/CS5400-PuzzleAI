@@ -104,4 +104,8 @@ class Game:
     self.board[action.coord[1]][action.coord[0]] = action.color
 
   def copy(self):
-    return deepcopy(self)
+    cp = Game()
+    cp.start = [list(x) for x in self.start]
+    cp.end = [list(x) for x in self.end]
+    cp.board = [list(x) for x in self.board]
+    return cp

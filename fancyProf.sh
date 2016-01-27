@@ -8,6 +8,6 @@ rm /tmp/profdata.callgrind
 TEMPFILE=$(mktemp --tmpdir XXXXX.svg)
 NAME=$(basename "$TEMPFILE")
 
-dot -Tsvg /tmp/out.dot -o/tmp/$NAME 
+dot -Tsvg /tmp/out.dot -o ProfGraphs/$NAME 
 rm /tmp/out.dot
-chmod 775 /tmp/$NAME
+chmod 775 ProfGraphs/$NAME
