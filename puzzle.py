@@ -6,14 +6,12 @@ import ColorConnect
 from SearchTree import SearchTree, Node
 from collections import deque
 from copy import deepcopy
-
-import cProfile
     
 
 def depthFirstSolve(game):
-  tree = SearchTree(game)
+  root = Node(game)
 
-  frontier = deque([tree.root])
+  frontier = deque([root])
 
   while len(frontier) > 0:
     curNode = frontier.popleft()
@@ -22,7 +20,7 @@ def depthFirstSolve(game):
     else:
       newActions = curNode.state.getAllActions()
       for action in newActions:
-        newState = deepcopy(curNode.state)
+        newState = curNode.state.copy()
         newState.perform(action)
         newNode = Node(newState, action, curNode, curNode.cost + 1)
         frontier.append(newNode)
@@ -38,13 +36,16 @@ if __name__ == "__main__":
 
   game = ColorConnect.Game(filePath)
 
-  print(game.starts)
-  print(game.ends)
   
   sol = depthFirstSolve(game)
 
+  #Debugging
+  print(game.start)
+  print(game.end)
   print("Sol: {}\t Parent: {}".format(sol, sol.parent))
 
+
+  #Temp Solution
   if sol:
     cur = sol
     while cur.parent is not None:
