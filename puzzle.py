@@ -8,22 +8,29 @@ from collections import deque
 from copy import deepcopy
     
 
-def depthFirstSolve(game):
+def breadthFirstSolve(game):
   root = Node(game)
 
   frontier = deque([root])
+  visited = deque([])
 
   while len(frontier) > 0:
     curNode = frontier.popleft()
-    if curNode.state.gameOver():
+    if curNode.state in visited:
+      continue
+    elif curNode.state.gameOver():
       return curNode
     else:
+      visited.append(curNode.state)
       newActions = curNode.state.getAllActions()
       for action in newActions:
         newState = curNode.state.copy()
         newState.perform(action)
         newNode = Node(newState, action, curNode, curNode.cost + 1)
         frontier.append(newNode)
+    
+    if len(visited) % 100 == 0:
+        print(len(visited))
 
   return None   
 
@@ -37,7 +44,7 @@ if __name__ == "__main__":
   game = ColorConnect.Game(filePath)
 
   
-  sol = depthFirstSolve(game)
+  sol = breadthFirstSolve(game)
 
   #Debugging
   print(game.start)

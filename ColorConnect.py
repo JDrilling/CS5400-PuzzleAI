@@ -19,6 +19,9 @@ class Game:
     if path:
       self.loadFromFile(path)
 
+  def __eq__(self, other):
+    return self.board == other.board    
+
   #Loads the initial game state from the specified file.
   def loadFromFile(self, path):
     try:
@@ -48,8 +51,6 @@ class Game:
           else:
             raise Exception("Found 3rd instance of color: {}  --- Wat?".format(dat))
 
-    print(self.start)
-    print(self.end)
 
   #Returns a list of Actions that can currently be performed in this game state.
   def getAllActions(self):
