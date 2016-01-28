@@ -19,8 +19,15 @@ class Game:
     if path:
       self.loadFromFile(path)
 
+  def __hash__(self):
+    return hash((tuple(tuple(line) for line in self.board),\
+                tuple(tuple(coord) for coord in self.start)))
+
   def __eq__(self, other):
-    return self.board == other.board    
+    if isinstance(other, Game):
+        return self.board == other.board and self.start == other.start
+    else:
+        return False
 
   #Loads the initial game state from the specified file.
   def loadFromFile(self, path):
