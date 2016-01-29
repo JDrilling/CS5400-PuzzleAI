@@ -27,7 +27,7 @@ def breadthFirstSolve(game):
       if newState.gameOver():
         print("Found! Searched through {} states.".format(states))
         print("\t{} are left in the frontier.".format(len(frontier)))
-        return curNode
+        return Node(newState, action, curNode, curNode.cost + 1)
 
       newNode = Node(newState, action, curNode, curNode.cost + 1)
       frontier.append(newNode)
@@ -37,11 +37,6 @@ def breadthFirstSolve(game):
     if curNode.cost > maxCost:
       maxCost = curNode.cost
       print("Cur Depth: {}".format(maxCost))
-    '''
-    if states % 100 == 0:
-      print("Cur States: {}".format(states))
-      print("Cur Frontier: {}".format(len(frontier)))
-    '''
     
   print("No solution found! Searched through {} states...".format(len(visited)))
   return None   

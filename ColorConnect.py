@@ -140,8 +140,12 @@ class Game:
 
   def copy(self):
     cp = Game()
-    cp.start = [bytearray(x) for x in self.start]
+    #Changed to a shallow copy because the starts don't change
+    #cp.start = [bytearray(x) for x in self.start]
+    cp.start = self.start
     cp.head = [bytearray(x) for x in self.head]
-    cp.end = [bytearray(x) for x in self.end]
+    #Changed to a shallow copy because the end doesn't change
+    #cp.end = [bytearray(x) for x in self.end]
+    cp.end = self.end
     cp.board = self.board.copy()
     return cp
