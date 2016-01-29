@@ -11,29 +11,37 @@ def breadthFirstSolve(game):
   root = Node(game)
 
   frontier = deque([root])
-  explored = set()
   states = 0
   duplicates = 0
+  maxCost = 0
+
 
   while len(frontier) > 0:
     states += 1
     curNode = frontier.popleft()
-    if curNode.state.gameOver():
-      print("Found! Searched through {} states.".format(states))
-      print("\tEncountered {} duplicates along the way.".format(duplicates))
-      print("\t{} are left in the frontier.".format(len(frontier)))
-      return curNode
-    else:
-      newActions = curNode.state.getAllActions()
-      for action in newActions:
-        newState = curNode.state.copy()
-        newState.perform(action)
-        if newState in explored:
-          continue
-        else:
-          explored.add(newState)
-          newNode = Node(newState, action, curNode, curNode.cost + 1)
-          frontier.append(newNode)
+    newActions = curNode.state.getAllActions()
+    for action in newActions:
+      newState = curNode.state.copy()
+      newState.perform(action)
+
+      if newState.gameOver():
+        print("Found! Searched through {} states.".format(states))
+        print("\t{} are left in the frontier.".format(len(frontier)))
+        return curNode
+
+      newNode = Node(newState, action, curNode, curNode.cost + 1)
+      frontier.append(newNode)
+
+    curNode.state = None
+
+    if curNode.cost > maxCost:
+      maxCost = curNode.cost
+      print("Cur Depth: {}".format(maxCost))
+    '''
+    if states % 100 == 0:
+      print("Cur States: {}".format(states))
+      print("Cur Frontier: {}".format(len(frontier)))
+    '''
     
   print("No solution found! Searched through {} states...".format(len(visited)))
   return None   
@@ -55,20 +63,9 @@ if __name__ == "__main__":
 
   #Debugging
   print("Color starting spaces are: {}".format(game.start))
+  print("Color heads are at: {}".format(game.head))
   print("Color ending spaces are: {}".format(game.end))
 
-  '''
-  #Temp Solution
-  if sol:
-    cur = sol
-    while cur.parent is not None:
-      print("Color: {}\t {}".format(cur.action.color, cur.action.coord))
-      cur = cur.parent
-  else:
-    print("No solution found! :(")
-
-
-  '''
   if sol:
     solStack = []
     cur = sol
@@ -90,13 +87,16 @@ if __name__ == "__main__":
       action = solStack.pop()
       f.write("{} {} {}".format(action.color, action.coord[0], action.coord[1]))
       if len(solStack) != 0:
-        f.write(",")
+        f.write(',')
     f.write('\n')
 
-    for line in sol.state.board:
-      for dat in line:
-        f.write(str(dat) + " ")
-      f.write('\n')
+    for i, ele in enumerate(sol.state.board.area):
+      if i % sol.state.board.dim == 0 and i != 0:
+        f.write('\n')
+      if ele == ColorConnect.Board.EMPTY:
+        f.write("e ")
+      else:
+        f.write(str(ele) + " ")
     f.close()
   except IOError:
     print("Could not open solution file")
