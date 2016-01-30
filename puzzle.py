@@ -4,27 +4,33 @@
 import sys
 import ColorConnect
 import datetime
+import re
 from SearchTree import SearchTree, Node
 from collections import deque
 
-def breadthFirstSolve(game):
-  root = Node(game)
 
+#Desc: Searches a tree of ColorConnect using a breadth first search.
+def BFTS_Solve(game):
+  root = Node(game)
+  #Nodes to explore
   frontier = deque([root])
+
   states = 0
   duplicates = 0
   maxCost = 0
 
-
+  #Search the frontier until we run out of nodes to explore
   while len(frontier) > 0:
     states += 1
     curNode = frontier.popleft()
     newActions = curNode.state.getAllActions()
+    #Search through each action we can perform with the current nodes state
     for action in newActions:
       newState = curNode.state.copy()
       newState.perform(action)
 
       if newState.gameOver():
+        #Debugging.
         print("Found! Searched through {} states.".format(states))
         print("\t{} are left in the frontier.".format(len(frontier)))
         return Node(newState, action, curNode, curNode.cost + 1)
@@ -33,7 +39,8 @@ def breadthFirstSolve(game):
       frontier.append(newNode)
 
     curNode.state = None
-
+    
+    #Debugging.
     if curNode.cost > maxCost:
       maxCost = curNode.cost
       print("Cur Depth: {}".format(maxCost))
@@ -51,7 +58,7 @@ if __name__ == "__main__":
   game = ColorConnect.Game(filePath)
 
   start = datetime.datetime.now()
-  sol = breadthFirstSolve(game)
+  sol = BFTS_Solve(game)
   end = datetime.datetime.now()
   msSpent = end - start
   msSpent = msSpent.microseconds
@@ -61,6 +68,8 @@ if __name__ == "__main__":
   print("Color heads are at: {}".format(game.head))
   print("Color ending spaces are: {}".format(game.end))
 
+  #Since we have the solution node and references to to parents
+  #Climb back up the tree pushing each node for the solution onto a stack
   if sol:
     solStack = []
     cur = sol
@@ -70,9 +79,10 @@ if __name__ == "__main__":
   else:
     print("No solution found! :(")
 
+  #Outputs the solution in the specified format
   try:
-    outPath = "{}.sol".format(filePath.rstrip(".txt"))
-    print(outPath)
+    outPath = re.sub(r'\.(.)+$',".sol",filePath)
+    print("Solution outputted to: {}".format(outPath))
     f = open(outPath, "w+")
     f.write(str(msSpent))
     f.write('\n')
@@ -95,4 +105,3 @@ if __name__ == "__main__":
     f.close()
   except IOError:
     print("Could not open solution file")
-

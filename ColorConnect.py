@@ -21,11 +21,11 @@ class Board:
     cp.area = bytearray(self.area)
     return cp
 
-  def set(self, x, y, dat):
-    self.area[x + self.dim*y] = dat
+  def set(self, coord, dat):
+    self.area[coord[0] + self.dim*coord[1]] = dat
 
-  def get(self, x, y):
-    return self.area[x + self.dim*y]
+  def get(self, coord):
+    return self.area[coord[0] + self.dim*coord[1]]
 
 class Game:
   def __init__(self, path=None):
@@ -36,16 +36,6 @@ class Game:
 
     if path:
       self.loadFromFile(path)
-
-  def __hash__(self):
-    return hash((tuple(tuple(self.board.area)),\
-                tuple(tuple(coord) for coord in self.head)))
-
-  def __eq__(self, other):
-    if isinstance(other, Game):
-        return self.board.area == other.board.area and self.head == other.head
-    else:
-        return False
 
   #Loads the initial game state from the specified file.
   def loadFromFile(self, path):
@@ -66,12 +56,13 @@ class Game:
       print("Error openening puzzle file: \'{}\'\n".format(path))
       sys.exit()
 
+    #Loops through the temp board to load it into the bytearray
     for y, row in enumerate(tmp):
       for x, dat in enumerate(row):
         if dat != 'e' and 0 <= int(dat) < colors:
           dat = int(dat)
-          self.board.set(x,y, dat)
           coord = bytearray([x,y])
+          self.board.set(coord, dat)
           if self.start[dat] is None:
             self.start[dat] = coord
             self.head[dat] = coord
@@ -80,14 +71,13 @@ class Game:
           else:
             raise Exception("Found 3rd instance of color: {}  --- Wat?".format(dat))
         elif dat == 'e':
-          self.board.set(x, y, Board.EMPTY)
+          self.board.set([x,y], Board.EMPTY)
 
   #Returns a list of Actions that can currently be performed in this game state.
   def getAllActions(self):
     actions = []
 
     for color, cur in enumerate(self.head):
-
       if cur == self.end[color]:
         continue
 
@@ -95,7 +85,7 @@ class Game:
       if cur[1] + 1 < self.board.dim:
         up = bytearray(cur)
         up[1] += 1
-        if self.board.get(up[0], up[1]) == Board.EMPTY or (self.end[color] == up and cur != self.start[color]):
+        if self.board.get(up) == Board.EMPTY or (self.end[color] == up and cur != self.start[color]):
           act = Action(color, up)
           actions.append(act)
       
@@ -103,7 +93,7 @@ class Game:
       if cur[1] > 0:
         dn = bytearray(cur)
         dn[1] -= 1
-        if self.board.get(dn[0], dn[1]) == Board.EMPTY or (self.end[color] == dn and cur != self.start[color]):
+        if self.board.get(dn) == Board.EMPTY or (self.end[color] == dn and cur != self.start[color]):
           act = Action(color, dn)
           actions.append(act)
 
@@ -111,7 +101,7 @@ class Game:
       if cur[0] > 0:
         lft = bytearray(cur)
         lft[0] -= 1
-        if self.board.get(lft[0], lft[1]) == Board.EMPTY or (self.end[color] == lft and cur != self.start[color]):
+        if self.board.get(lft) == Board.EMPTY or (self.end[color] == lft and cur != self.start[color]):
           act = Action(color, lft)
           actions.append(act)
 
@@ -119,7 +109,7 @@ class Game:
       if cur[0] + 1 < self.board.dim:
         rt = bytearray(cur)
         rt[0] += 1 
-        if self.board.get(rt[0], rt[1]) == Board.EMPTY or (self.end[color] == rt and cur != self.start[color]):
+        if self.board.get(rt) == Board.EMPTY or (self.end[color] == rt and cur != self.start[color]):
           act = Action(color, rt)
           actions.append(act)
 
@@ -136,7 +126,7 @@ class Game:
   #Changes the game state to reflect the action given.
   def perform(self, action):
     self.head[action.color] = action.coord
-    self.board.set(action.coord[0], action.coord[1], action.color)
+    self.board.set(action.coord, action.color)
 
   def copy(self):
     cp = Game()
