@@ -5,6 +5,3 @@ class Node:
     self.action = action
     self.cost = cost
 
-class SearchTree:
-  def __init__(self, state):
-    self.root = Node(state)

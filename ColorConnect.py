@@ -5,6 +5,8 @@
 import sys
 from copy import deepcopy
 
+#Very basic Class to hold an action in the game, wich is in essence a color
+# and where to place that color
 class Action:
   def __init__(self, color, coord):
     self.color = color
@@ -16,11 +18,14 @@ class Board:
     self.dim = dim
     self.area = bytearray(self.dim**2)
 
+  #Creates a deep copy of the board object
+  #Returns: the deep copied Board object
   def copy(self):
     cp = Board(self.dim)
     cp.area = bytearray(self.area)
     return cp
 
+  #These are the setters and getters to add some abstraction to the byte array.
   def set(self, coord, dat):
     self.area[coord[0] + self.dim*coord[1]] = dat
 
@@ -37,7 +42,10 @@ class Game:
     if path:
       self.loadFromFile(path)
 
-  #Loads the initial game state from the specified file.
+  #Desc: Loads the initial game state from the specified file.
+  #Params: path - the relative path to the puzzle to be solved.
+  #Post: the board, start, head and end objects are set for this puzzle 
+  # instance.
   def loadFromFile(self, path):
     try:
       puzFile = open(path)
@@ -73,7 +81,9 @@ class Game:
         elif dat == 'e':
           self.board.set([x,y], Board.EMPTY)
 
-  #Returns a list of Actions that can currently be performed in this game state.
+  #Desc: determines wich actions can be performed in this game state.
+  #Returns: a list of 'Action' objects that represent valid changes to this
+  # game state.
   def getAllActions(self):
     actions = []
 
@@ -123,11 +133,15 @@ class Game:
 
     return True
 
-  #Changes the game state to reflect the action given.
+  #Desc: Changes the game state to reflect the action given.
+  #Param: action - an 'Action' object
+  #Pre: self.board must be set as a 'Board' object. 
+  #     The Action object should be a valid action in the current state.
   def perform(self, action):
     self.head[action.color] = action.coord
     self.board.set(action.coord, action.color)
 
+  #Returns: A deep copy of this game object
   def copy(self):
     cp = Game()
     #Changed to a shallow copy because the starts don't change

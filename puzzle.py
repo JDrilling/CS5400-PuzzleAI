@@ -5,11 +5,13 @@ import sys
 import ColorConnect
 import datetime
 import re
-from SearchTree import SearchTree, Node
+from SearchTree import Node
 from collections import deque
 
 
 #Desc: Searches a tree of ColorConnect using a breadth first search.
+#Params: game - ColorConnect.Game object the the BFTS algorithm will solve
+#Returns: The Last node in the solution.
 def BFTS_Solve(game):
   root = Node(game)
   #Nodes to explore
@@ -57,16 +59,16 @@ if __name__ == "__main__":
 
   game = ColorConnect.Game(filePath)
 
-  start = datetime.datetime.now()
-  sol = BFTS_Solve(game)
-  end = datetime.datetime.now()
-  msSpent = end - start
-  msSpent = msSpent.microseconds
-
   #Debugging
   print("Color starting spaces are: {}".format(game.start))
   print("Color heads are at: {}".format(game.head))
   print("Color ending spaces are: {}".format(game.end))
+
+  start = datetime.datetime.now()
+  sol = BFTS_Solve(game)
+  end = datetime.datetime.now()
+  delta = end - start
+  msSpent = (delta.seconds) * 1000000 + delta.microseconds
 
   #Since we have the solution node and references to to parents
   #Climb back up the tree pushing each node for the solution onto a stack
@@ -81,7 +83,7 @@ if __name__ == "__main__":
 
   #Outputs the solution in the specified format
   try:
-    outPath = re.sub(r'\.(.)+$',".sol",filePath)
+    outPath = re.sub(r'\.(.)+$',"_sol.txt",filePath)
     print("Solution outputted to: {}".format(outPath))
     f = open(outPath, "w+")
     f.write(str(msSpent))
