@@ -28,7 +28,7 @@ def BFTS_Solve(game):
     newActions = curNode.state.getAllActions()
     #Search through each action we can perform with the current nodes state
     for action in newActions:
-      newState = curNode.state.copy()
+      newState = ColorConnect.Game(copy=curNode.state)
       newState.perform(action)
 
       if newState.gameOver():
