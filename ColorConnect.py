@@ -21,7 +21,7 @@ class Board:
     #Creates a deep copy of the board object
     elif copy is not None:
       self.dim = copy.dim
-      self.area = bytearray(copy.area)
+      self.area = copy.area[:]
       #The valid Moves will not change for a copy so shallow copy is OK.
       self.validMoves = copy.validMoves
 
@@ -70,7 +70,7 @@ class Game:
     elif copy is not None:
       #Changed to a shallow copy because the starts don't change
       self.start = copy.start
-      self.head = [bytearray(x) for x in copy.head]
+      self.head = list(copy.head) 
       #Changed to a shallow copy because the end doesn't change
       self.end = copy.end
       self.board = Board(copy=copy.board)
@@ -94,8 +94,7 @@ class Game:
 
       puzFile.close()
     except IOError:
-      print("Error openening puzzle file: \'{}\'\n".format(path))
-      sys.exit()
+      raise("Error openening puzzle file: \'{}\'\n".format(path))
 
     #Loops through the temp board to load it into the bytearray
     for y, row in enumerate(tmp):
@@ -129,7 +128,7 @@ class Game:
       movesOnBoard = self.board.getValidMoves(cur)
       for move in movesOnBoard:
         if self.board.getTile(move) == Board.EMPTY or (self.end[color] == move and cur != self.start[color]):
-            act = Action(color, move)
+            act = (move, color)
             actions.append(act)
 
     return actions
@@ -143,5 +142,5 @@ class Game:
   #Pre: self.board must be set as a 'Board' object. 
   #     The Action object should be a valid action in the current state.
   def perform(self, action):
-    self.head[action.color] = action.coord
-    self.board.setTile(action.coord, action.color)
+    self.head[action[1]] = action[0]
+    self.board.setTile(action[0], action[1])

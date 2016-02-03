@@ -5,6 +5,7 @@ import sys
 import ColorConnect
 import datetime
 import re
+import random
 from SearchTree import Node
 from collections import deque
 
@@ -17,13 +18,12 @@ def BFTS_Solve(game):
   #Nodes to explore
   frontier = deque([root])
 
-  states = 0
+  states = 1
   duplicates = 0
   maxCost = 0
 
   #Search the frontier until we run out of nodes to explore
   while len(frontier) > 0:
-    states += 1
     curNode = frontier.popleft()
     newActions = curNode.state.getAllActions()
     #Search through each action we can perform with the current nodes state
@@ -36,6 +36,8 @@ def BFTS_Solve(game):
         print("Found! Searched through {} states.".format(states))
         print("\t{} are left in the frontier.".format(len(frontier)))
         return Node(newState, action, curNode, curNode.cost + 1)
+      else:
+        states += 1
 
       newNode = Node(newState, action, curNode, curNode.cost + 1)
       frontier.append(newNode)
@@ -47,9 +49,55 @@ def BFTS_Solve(game):
       maxCost = curNode.cost
       print("Cur Depth: {}".format(maxCost))
     
-  print("No solution found! Searched through {} states...".format(len(visited)))
+  print("No solution found! Searched through {} states...".format(states))
   return None   
 
+#Desc: Solves the game with a depth first search. This version is not recursive
+def DFTS_Solve(game, it=None):
+  root = Node(game)
+  frontier = deque([root])
+  states = 1
+  curDepth = 0
+
+  while len(frontier) > 0:
+    curNode = frontier.pop()
+    if it is not None and curNode.cost >= it:
+      continue
+
+    newActions = curNode.state.getAllActions()
+    random.shuffle(newActions)
+
+    for action in newActions:
+      newState = ColorConnect.Game(copy=curNode.state)
+      newState.perform(action)
+
+      if newState.gameOver():
+        #Debugging.
+        print("Found! Searched through {} states.".format(states))
+        print("\t{} are left in the frontier stack.".format(len(frontier)))
+        return Node(newState, action, curNode, curNode.cost + 1)
+      else:
+        states += 1
+
+      newNode = Node(newState, action, curNode, curNode.cost + 1)
+      frontier.append(newNode)
+
+  print("No solution found for depth of {}! Searched through {} states...".format(it, states))
+  return None
+
+def IterDepth(game):
+  it = 1
+
+  sol = DFTS_Solve(game, it)
+  while sol is None:
+    it += 1
+    sol = DFTS_Solve(game, it)
+    if it > 100:
+      print("We got to a depth of 100 using Iterative Deepening.")
+      print("\tWhile impressive that we could go that deep, something is wrong.")
+      break
+
+  return sol
 
 if __name__ == "__main__":
   if len(sys.argv) > 1:
@@ -57,7 +105,16 @@ if __name__ == "__main__":
   else:
     raise Exception("Must provide an input file path.\n puzzle.py <Puzzle Path>")
 
-  game = ColorConnect.Game(filePath)
+  if len(sys.argv) > 2:
+    algo = sys.argv[2]
+  else:
+    algo = "BFTS"
+
+  try:
+    game = ColorConnect.Game(filePath)
+  except err:
+    print(err)
+    sys.exit()
 
   #Debugging
   print("Color starting spaces are: {}".format(game.start))
@@ -65,7 +122,12 @@ if __name__ == "__main__":
   print("Color ending spaces are: {}".format(game.end))
 
   start = datetime.datetime.now()
-  sol = BFTS_Solve(game)
+
+  if algo == "DFTS":
+    sol = IterDepth(game)
+  else:
+    sol = BFTS_Solve(game)
+
   end = datetime.datetime.now()
   delta = end - start
   msSpent = (delta.seconds) * 1000000 + delta.microseconds
@@ -92,7 +154,7 @@ if __name__ == "__main__":
     f.write('\n')
     while len(solStack) > 0:
       action = solStack.pop()
-      f.write("{} {} {}".format(action.color, action.coord[0], action.coord[1]))
+      f.write("{} {} {}".format(action[1], action[0][0], action[0][1]))
       if len(solStack) != 0:
         f.write(',')
     f.write('\n')
