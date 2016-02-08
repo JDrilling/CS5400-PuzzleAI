@@ -52,25 +52,36 @@ def BFTS_Solve(game):
   print("No solution found! Searched through {} states...".format(states))
   return None   
 
-#Desc: Solves the game with a depth first search. This version is not recursive
+# Desc:     Solves the game with a depth first search. This version is not recursive
+# Params:   game - a ColorConnect.Game object that has been initialized
+#           it - Iterative depth. If it is None, then it will search until a 
+#               solution is found or all states are searched
+# Returns:  None if no solution is found,
+#           A Node object if a solution is found
 def DFTS_Solve(game, it=None):
   root = Node(game)
   frontier = deque([root])
   states = 1
   curDepth = 0
 
+  # If for some reason the root is the goal.
+  if root.state.gameOver():
+    return root
+
   while len(frontier) > 0:
     curNode = frontier.pop()
     if it is not None and curNode.cost >= it:
       continue
 
+    # Get all possible moves we can make from the curNodes state
     newActions = curNode.state.getAllActions()
-    random.shuffle(newActions)
-
+    # random.shuffle(newActions)
     for action in newActions:
+      # Generates a new Game object
       newState = ColorConnect.Game(copy=curNode.state)
       newState.perform(action)
 
+      # Checks all states before putting them in the front
       if newState.gameOver():
         #Debugging.
         print("Found! Searched through {} states.".format(states))
@@ -79,20 +90,26 @@ def DFTS_Solve(game, it=None):
       else:
         states += 1
 
+      # Add generated node to the frontier
       newNode = Node(newState, action, curNode, curNode.cost + 1)
       frontier.append(newNode)
 
   print("No solution found for depth of {}! Searched through {} states...".format(it, states))
   return None
 
+
+# Desc: Uses DFTS with iterative Deepening to solve the game object
+# Params: game - an initialized game object
+# Returns: a Node object, representing the solution if one is found
+#          None, if no solution is found before depth 10000
 def IterDepth(game):
-  it = 1
+  it = 0
 
   sol = DFTS_Solve(game, it)
   while sol is None:
     it += 1
     sol = DFTS_Solve(game, it)
-    if it > 100:
+    if it > 10000:
       print("We got to a depth of 100 using Iterative Deepening.")
       print("\tWhile impressive that we could go that deep, something is wrong.")
       break
@@ -105,6 +122,7 @@ if __name__ == "__main__":
   else:
     raise Exception("Must provide an input file path.\n puzzle.py <Puzzle Path>")
 
+  # Arg[2] chooses algorithm to use
   if len(sys.argv) > 2:
     algo = sys.argv[2]
   else:
@@ -123,6 +141,7 @@ if __name__ == "__main__":
 
   start = datetime.datetime.now()
 
+  # Algo to use, defaults to BFTS
   if algo == "DFTS":
     sol = IterDepth(game)
   else:
@@ -145,6 +164,7 @@ if __name__ == "__main__":
 
   #Outputs the solution in the specified format
   try:
+    # Nice little regex to append the file with "_sol.txt"
     outPath = re.sub(r'\.(.)+$',"_sol.txt",filePath)
     print("Solution outputted to: {}".format(outPath))
     f = open(outPath, "w+")
