@@ -144,8 +144,8 @@ class Game:
       movesOnBoard = self.board.getValidMoves(cur)
       for move in movesOnBoard:
         if self.board.getTile(move) == Board.EMPTY or (self.end[color] == move and cur != self.start[color]):
-            act = (move, color)
-            actions.append(act)
+          act = (move, color)
+          actions.append(act)
 
     return actions
 

@@ -119,15 +119,16 @@ def IterDepth(game):
   return sol
 
 
-def GrBFS_Solve(game, graphSearch = True):
+def BestFirst_Solve(game, graphSearch = True, astar = False):
   root = Node(game)
   frontierSet = set()
   frontierHeap = []
   explored = set()
 
   states = 1
+  curF = root.state.distLeft()
 
-  heapq.heappush(frontierHeap, (root.state.distLeft(), states, root))
+  heapq.heappush(frontierHeap, (curF, states, root))
   frontierSet.add(root)
 
   while len(frontierHeap) > 0:
@@ -135,10 +136,8 @@ def GrBFS_Solve(game, graphSearch = True):
     
     if graphSearch:
       frontierSet.remove(curNode)
-      if curNode in explored:
-        continue
 
-    explored.add(curNode)
+    explored.add(hash(curNode))
 
     if curNode.state.gameOver():
       print("Found! Searched through {} states.".format(states))
@@ -150,14 +149,28 @@ def GrBFS_Solve(game, graphSearch = True):
       states += 1 
       newState = ColorConnect.Game(copy=curNode.state)
       newState.perform(action)
-      newNode = Node(newState, action, curNode, curNode.cost + 1, h=newState.distLeft())
-      if graphSearch and newNode not in frontierSet:
-        frontierSet.add(newNode)
-        heapq.heappush(frontierHeap, (newNode.h, states, newNode))
-      if not graphSearch:
-        heapq.heappush(frontierHeap, (newNode.h, states, newNode))
+      newNode = Node(newState, action, curNode, curNode.cost + 1)
 
-    # curNode.state = None
+      # Here we select which heuristic we will use.
+      if astar:
+        Fn = newNode.cost + newNode.state.distLeft()
+      else:
+        Fn = newNode.state.distLeft()
+
+      if graphSearch:
+        if newNode not in frontierSet and hash(newNode) not in explored:
+          frontierSet.add(newNode)
+          heapq.heappush(frontierHeap, (Fn, states, newNode))
+      else:
+        heapq.heappush(frontierHeap, (Fn, states, newNode))
+
+    curNode.state = None
+    #Debugging.
+    '''
+    if priority != curF:
+      curF = priority
+      print("Currently evaluating F = {}".format(curF))
+    '''
 
   print("No solution found! Searched through {} states...".format(states))
   return None
@@ -183,9 +196,11 @@ if __name__ == "__main__":
     sys.exit()
 
   #Debugging
+  '''
   print("Color starting spaces are: {}".format(game.start))
   print("Color heads are at: {}".format(game.head))
   print("Color ending spaces are: {}".format(game.end))
+  '''
 
   start = datetime.datetime.now()
 
@@ -195,12 +210,18 @@ if __name__ == "__main__":
   # breadth first tree
   elif algo.lower() == "bfts":
     sol = BFTS_Solve(game)
+  # A* graph search
+  elif algo.lower() == "asgs":
+    sol = BestFirst_Solve(game, graphSearch=True, astar=True)
+  # A* tree search
+  elif algo.lower() == "asts":
+    sol = BestFirst_Solve(game, graphSearch=False, astar=True)
   # greedy Best first tree
   elif algo.lower() == "gbfts":
-    sol = GrBFS_Solve(game, graphSearch=False)
+    sol = BestFirst_Solve(game, graphSearch=False, astar=False)
   # greedy Best first graph
   else:
-    sol = GrBFS_Solve(game, graphSearch=True)
+    sol = BestFirst_Solve(game, graphSearch=True, astar=False)
 
   end = datetime.datetime.now()
   delta = end - start
