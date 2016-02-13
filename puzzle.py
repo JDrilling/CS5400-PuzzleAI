@@ -6,8 +6,10 @@ import ColorConnect
 import datetime
 import re
 import random
+import heapq
 from SearchTree import Node
 from collections import deque, OrderedDict
+
 
 
 #Desc: Searches a tree of ColorConnect using a breadth first search.
@@ -119,38 +121,43 @@ def IterDepth(game):
 
 def GrBFS_Solve(game, graphSearch = True):
   root = Node(game)
-  frontier = OrderedDict()
-  frontier[root] = True
+  frontierSet = set()
+  frontierHeap = []
   explored = set()
 
   states = 1
-  duplicates = 0
-  maxCost = 0
 
-  while len(frontier) > 0:
-    curNode = frontier.popitem(last=False)[0]
-    if graphSearch and curNode in explored:
-      continue
+  heapq.heappush(frontierHeap, (root.state.distLeft(), states, root))
+  frontierSet.add(root)
+
+  while len(frontierHeap) > 0:
+    priority, garbo, curNode = heapq.heappop(frontierHeap)
+    
+    if graphSearch:
+      frontierSet.remove(curNode)
+      if curNode in explored:
+        continue
 
     explored.add(curNode)
 
     if curNode.state.gameOver():
       print("Found! Searched through {} states.".format(states))
-      print("\t{} are left in the frontier.".format(len(frontier)))
+      print("\t{} are left in the frontier.".format(len(frontierHeap)))
       return curNode
-    else:
-      states += 1
 
     newActions = curNode.state.getAllActions()
     for action in newActions:
+      states += 1 
       newState = ColorConnect.Game(copy=curNode.state)
       newState.perform(action)
       newNode = Node(newState, action, curNode, curNode.cost + 1, h=newState.distLeft())
-      if not graphSearch or newNode not in frontier:
-        frontier[newNode] = True
+      if graphSearch and newNode not in frontierSet:
+        frontierSet.add(newNode)
+        heapq.heappush(frontierHeap, (newNode.h, states, newNode))
+      if not graphSearch:
+        heapq.heappush(frontierHeap, (newNode.h, states, newNode))
 
-    # Sort the list by h value so we always pop off the best h.
-    frontier = OrderedDict(sorted(frontier.items(), key=lambda x: x[0].h))
+    # curNode.state = None
 
   print("No solution found! Searched through {} states...".format(states))
   return None
@@ -190,10 +197,10 @@ if __name__ == "__main__":
     sol = BFTS_Solve(game)
   # greedy Best first tree
   elif algo.lower() == "gbfts":
-    sol = GrBFS_Solve(game, graphSearch=True)
+    sol = GrBFS_Solve(game, graphSearch=False)
   # greedy Best first graph
   else:
-    sol = GrBFS_Solve(game, graphSearch=False)
+    sol = GrBFS_Solve(game, graphSearch=True)
 
   end = datetime.datetime.now()
   delta = end - start
