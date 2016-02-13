@@ -56,6 +56,12 @@ class Board:
   def getValidMoves(self, coord):
     return self.validMoves[coord[0] + self.dim*coord[1]]
 
+  def __eq__(self, other):
+    return self.area == other.area
+
+  def __hash__(self):
+    return hash(tuple(self.area))
+
 class Game:
   def __init__(self, path=None, copy=None):
     if copy is None:
@@ -74,6 +80,16 @@ class Game:
       #Changed to a shallow copy because the end doesn't change
       self.end = copy.end
       self.board = Board(copy=copy.board)
+
+  def __eq__(self, other):
+    if isinstance(other, Game):
+      return self.board == other.board and self.head == other.head
+    else:
+      return False
+
+  def __hash__(self):
+    return hash((self.board,
+            tuple(frozenset(coord) for coord in self.head)))
 
   #Desc: Loads the initial game state from the specified file.
   #Params: path - the relative path to the puzzle to be solved.
@@ -136,6 +152,13 @@ class Game:
   #Determins if the current state is a goal state
   def gameOver(self):
     return self.head == self.end
+
+  def distLeft(self):
+    dist = 0
+    for c1, c2 in zip(self.head, self.end):
+      dist += abs(c1[0] - c2[0]) + abs(c1[1] - c2[1])
+
+    return dist
 
   #Desc: Changes the game state to reflect the action given.
   #Param: action - an 'Action' object

@@ -7,7 +7,7 @@ import datetime
 import re
 import random
 from SearchTree import Node
-from collections import deque
+from collections import deque, OrderedDict
 
 
 #Desc: Searches a tree of ColorConnect using a breadth first search.
@@ -116,6 +116,47 @@ def IterDepth(game):
 
   return sol
 
+
+def GrBFS_Solve(game, graphSearch = True):
+  root = Node(game)
+  frontier = OrderedDict()
+  frontier[root] = True
+  explored = set()
+
+  states = 1
+  duplicates = 0
+  maxCost = 0
+
+  while len(frontier) > 0:
+    curNode = frontier.popitem(last=False)[0]
+    if graphSearch and curNode in explored:
+      continue
+
+    explored.add(curNode)
+
+    if curNode.state.gameOver():
+      print("Found! Searched through {} states.".format(states))
+      print("\t{} are left in the frontier.".format(len(frontier)))
+      return curNode
+    else:
+      states += 1
+
+    newActions = curNode.state.getAllActions()
+    for action in newActions:
+      newState = ColorConnect.Game(copy=curNode.state)
+      newState.perform(action)
+      newNode = Node(newState, action, curNode, curNode.cost + 1, h=newState.distLeft())
+      if not graphSearch or newNode not in frontier:
+        frontier[newNode] = True
+
+    # Sort the list by h value so we always pop off the best h.
+    frontier = OrderedDict(sorted(frontier.items(), key=lambda x: x[0].h))
+
+  print("No solution found! Searched through {} states...".format(states))
+  return None
+
+
+
 if __name__ == "__main__":
   if len(sys.argv) > 1:
     filePath = sys.argv[1]
@@ -126,7 +167,7 @@ if __name__ == "__main__":
   if len(sys.argv) > 2:
     algo = sys.argv[2]
   else:
-    algo = "BFTS"
+    algo = "gbfgs"
 
   try:
     game = ColorConnect.Game(filePath)
@@ -141,11 +182,18 @@ if __name__ == "__main__":
 
   start = datetime.datetime.now()
 
-  # Algo to use, defaults to BFTS
-  if algo == "DFTS":
+  # depthfist - iterative deepening
+  if algo.lower() == "dfts":
     sol = IterDepth(game)
-  else:
+  # breadth first tree
+  elif algo.lower() == "bfts":
     sol = BFTS_Solve(game)
+  # greedy Best first tree
+  elif algo.lower() == "gbfts":
+    sol = GrBFS_Solve(game, graphSearch=True)
+  # greedy Best first graph
+  else:
+    sol = GrBFS_Solve(game, graphSearch=False)
 
   end = datetime.datetime.now()
   delta = end - start

@@ -9,7 +9,9 @@ The Algorithm parameter is optional, but will default to "BFTS."
 
 The options for the Algorithm paramater are currently:
     "BFTS"    - The algo for assignment 1, Breadth First Tree Search
-    "Id-DFTS" - The algo for assignment 2, Iterative Deepening - Depth First Tree Search 
+    "DFTS" - The algo for assignment 2, Iterative Deepening - Depth First Tree Search 
+    "GBFGS" - Algo for assignment 3, Greedy Best First Graph Search
+    "GBFTS" - Algo for assignment 3 Bonus, Greedy Best First Tree Search
 
 My program will output debbugging information regarding the algorithm's current 
 depth in the search tree and the original state of the game. Just ignore this.
