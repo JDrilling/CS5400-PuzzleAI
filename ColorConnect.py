@@ -110,7 +110,7 @@ class Game:
 
       puzFile.close()
     except IOError:
-      raise("Error openening puzzle file: \'{}\'\n".format(path))
+      raise Exception("Error openening puzzle file: \'{}\'\n".format(path))
 
     #Loops through the temp board to load it into the bytearray
     for y, row in enumerate(tmp):

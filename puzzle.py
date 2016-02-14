@@ -118,7 +118,13 @@ def IterDepth(game):
 
   return sol
 
-
+# Desc: Best first solver uses a heuristic (the distance from each point to 
+#       Their goal, to determine which move to make.
+# Params: game - ColorConnect.Game object - initialized
+#         GraphSearch - True enables graph search, false is enables tree search
+#         astar - true enables astar search, otherwise it's graph search
+# Returns: a Node object that represents the goal node.
+#          or None if no goal is found
 def BestFirst_Solve(game, graphSearch = True, astar = False):
   root = Node(game)
   frontierSet = set()
@@ -146,7 +152,6 @@ def BestFirst_Solve(game, graphSearch = True, astar = False):
 
     newActions = curNode.state.getAllActions()
     for action in newActions:
-      states += 1 
       newState = ColorConnect.Game(copy=curNode.state)
       newState.perform(action)
       newNode = Node(newState, action, curNode, curNode.cost + 1)
@@ -159,9 +164,11 @@ def BestFirst_Solve(game, graphSearch = True, astar = False):
 
       if graphSearch:
         if newNode not in frontierSet and hash(newNode) not in explored:
+          states += 1 
           frontierSet.add(newNode)
           heapq.heappush(frontierHeap, (Fn, states, newNode))
       else:
+        states += 1 
         heapq.heappush(frontierHeap, (Fn, states, newNode))
 
     curNode.state = None
@@ -229,14 +236,14 @@ if __name__ == "__main__":
 
   #Since we have the solution node and references to to parents
   #Climb back up the tree pushing each node for the solution onto a stack
-  if sol:
+  if sol is not None:
     solStack = []
     cur = sol
     while cur.parent is not None:
       solStack.append(cur.action)
       cur = cur.parent
   else:
-    print("No solution found! :(")
+    raise Exception("No solution found! Exiting.")
 
   #Outputs the solution in the specified format
   try:
