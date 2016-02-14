@@ -150,6 +150,7 @@ def BestFirst_Solve(game, graphSearch = True, astar = False):
       print("\t{} are left in the frontier.".format(len(frontierHeap)))
       return curNode
 
+    # Gets all the actions for the current game state.
     newActions = curNode.state.getAllActions()
     for action in newActions:
       newState = ColorConnect.Game(copy=curNode.state)
@@ -162,6 +163,7 @@ def BestFirst_Solve(game, graphSearch = True, astar = False):
       else:
         Fn = newNode.state.distLeft()
 
+      # Options for graph search and tree search.
       if graphSearch:
         if newNode not in frontierSet and hash(newNode) not in explored:
           states += 1 
@@ -171,7 +173,9 @@ def BestFirst_Solve(game, graphSearch = True, astar = False):
         states += 1 
         heapq.heappush(frontierHeap, (Fn, states, newNode))
 
+    # Don't need the game object after it has been evaluated, so let gc take it.
     curNode.state = None
+
     #Debugging.
     '''
     if priority != curF:

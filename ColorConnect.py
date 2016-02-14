@@ -25,6 +25,9 @@ class Board:
       #The valid Moves will not change for a copy so shallow copy is OK.
       self.validMoves = copy.validMoves
 
+  # Desc: Generates a dict of all possible moves at each index. this makes it
+  #       so that we only have to do move math once.
+  # Post: ValidMoves is set to a list of bytearrays
   def initMoveSet(self):
     self.validMoves = [[] for x in range(self.dim**2)]
     index = 0
@@ -56,8 +59,13 @@ class Board:
   def getValidMoves(self, coord):
     return self.validMoves[coord[0] + self.dim*coord[1]]
 
+  # Overloding hash() and == provides a lot of abstraction so that we can use
+  # sets and == (or 'in')
   def __eq__(self, other):
-    return self.area == other.area
+    if isinstance(other, Board):
+      return self.area == other.area
+    else:
+      return False
 
   def __hash__(self):
     return hash(tuple(self.area))
@@ -143,16 +151,19 @@ class Game:
 
       movesOnBoard = self.board.getValidMoves(cur)
       for move in movesOnBoard:
-        if self.board.getTile(move) == Board.EMPTY or (self.end[color] == move and cur != self.start[color]):
+        if self.board.getTile(move) == Board.EMPTY or \
+          (self.end[color] == move and cur != self.start[color]):
           act = (move, color)
           actions.append(act)
 
     return actions
 
-  #Determins if the current state is a goal state
+  #Determines if the current state is a goal state
   def gameOver(self):
     return self.head == self.end
 
+  # Determines the manhattan distance between each color and the end.
+  # Our hueristic for Best First searches.
   def distLeft(self):
     dist = 0
     for c1, c2 in zip(self.head, self.end):
