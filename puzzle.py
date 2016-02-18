@@ -127,30 +127,44 @@ def IterDepth(game):
 #          or None if no goal is found
 def BestFirst_Solve(game, graphSearch = True, astar = False):
   root = Node(game)
-  frontierSet = set()
-  frontierHeap = []
   explored = set()
 
-  states = 1
-  curF = root.state.distLeft()
+  # I use two datastructures for my frontier pfifo. A Set for O(1) lookup, and
+  # a heap for O(1) pops and O(lg(n)) insertions. Then no sorting is necessary.
+  frontierSet = set()
+  frontierHeap = []
 
-  heapq.heappush(frontierHeap, (curF, states, root))
+  states = 1
+  evaled = 0
+  curF = root.state.sumDist()
+  secondarySort = root.state.minDist()
+
+  # Init both frontier data structures...
+  heapq.heappush(frontierHeap, (curF, secondarySort, states, root))
   frontierSet.add(root)
 
   while len(frontierHeap) > 0:
-    priority, garbo, curNode = heapq.heappop(frontierHeap)
+    priority, secondSort, stateNum, curNode = heapq.heappop(frontierHeap)
+    evaled += 1
+
+    # Large Debug Print
+    curNode.state.board.printB()
+    print("")
     
     if graphSearch:
       frontierSet.remove(curNode)
-
+  
+    # Add the node hash to the explored set, which is ignored if not graphsearch.
     explored.add(hash(curNode))
 
     if curNode.state.gameOver():
-      print("Found! Searched through {} states.".format(states))
+      print("Found! Searched through {} states.".format(evaled))
+      print("\t{} states were generated.".format(states))
       print("\t{} are left in the frontier.".format(len(frontierHeap)))
       return curNode
 
-    # Gets all the actions for the current game state.
+    # Gets all the actions for the current game state, and create the nodes
+    # for the resulting states.
     newActions = curNode.state.getAllActions()
     for action in newActions:
       newState = ColorConnect.Game(copy=curNode.state)
@@ -158,23 +172,33 @@ def BestFirst_Solve(game, graphSearch = True, astar = False):
       newNode = Node(newState, action, curNode, curNode.cost + 1)
 
       # Here we select which heuristic we will use.
+      # SecondarySort, is placed 2nd in the tuple used in the heap and is
+      # therefore element considered for ordering in the pfifo if Fn is the 
+      # same.
       if astar:
-        Fn = newNode.cost + newNode.state.distLeft()
+        Fn = newNode.cost + newNode.state.sumDist()
+        secondarySort = newNode.state.minDist()
+      # If we're not using AStar, we just set secondary Sort to a constant
+      # so the heap defaults to the third element in the tuple, which is when
+      # the node was created. I.E. for equal Fn's, the algorithem will chose
+      # the node that was created first.
       else:
-        Fn = newNode.state.distLeft()
+        Fn = newNode.state.sumDist()
+        secondarySort = 0
 
       # Options for graph search and tree search.
       if graphSearch:
         if newNode not in frontierSet and hash(newNode) not in explored:
           states += 1 
           frontierSet.add(newNode)
-          heapq.heappush(frontierHeap, (Fn, states, newNode))
+          heapq.heappush(frontierHeap, (Fn, secondarySort, states, newNode))
       else:
         states += 1 
-        heapq.heappush(frontierHeap, (Fn, states, newNode))
+        heapq.heappush(frontierHeap, (Fn, secondarySort, states, newNode))
 
     # Don't need the game object after it has been evaluated, so let gc take it.
     curNode.state = None
+    curNode.cost = None
 
     #Debugging.
     '''
@@ -249,6 +273,7 @@ if __name__ == "__main__":
   else:
     raise Exception("No solution found! Exiting.")
 
+
   #Outputs the solution in the specified format
   try:
     # Nice little regex to append the file with "_sol.txt"
@@ -276,3 +301,5 @@ if __name__ == "__main__":
     f.close()
   except IOError:
     print("Could not open solution file")
+
+  sol.state.board.printB()

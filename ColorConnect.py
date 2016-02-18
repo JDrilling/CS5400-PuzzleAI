@@ -70,6 +70,16 @@ class Board:
   def __hash__(self):
     return hash(tuple(self.area))
 
+  def printB(self):
+    for y in range(self.dim):
+      out = ""
+      for x in range(self.dim):
+        space = self.getTile((x,y))
+        if space == Board.EMPTY:
+          space = "e"
+        out += "{} ".format(space)
+      print(out)
+
 class Game:
   def __init__(self, path=None, copy=None):
     if copy is None:
@@ -152,7 +162,7 @@ class Game:
       movesOnBoard = self.board.getValidMoves(cur)
       for move in movesOnBoard:
         if self.board.getTile(move) == Board.EMPTY or \
-          (self.end[color] == move and cur != self.start[color]):
+           (self.end[color] == move and cur != self.start[color]):
           act = (move, color)
           actions.append(act)
 
@@ -162,17 +172,31 @@ class Game:
   def gameOver(self):
     return self.head == self.end
 
-  # Determines the manhattan distance between each color and the end.
-  # Our hueristic for Best First searches.
-  def distLeft(self):
-    dist = 0
-    for c1, c2 in zip(self.head, self.end):
-      dist += abs(c1[0] - c2[0]) + abs(c1[1] - c2[1])
+  def allDists(self):
+    dists = []
+    for index in range(len(self.start)):
+      dist = abs(self.head[index][0] - self.end[index][0]) +\
+             abs(self.head[index][1] - self.end[index][1])
 
-    return dist
+      if dist == 1 and self.head[index] == self.start[index]:
+          dist = 3
+
+      dists.append(dist)
+
+    return dists
+
+
+  def minDist(self):
+    return min(self.allDists())
+
+  def maxDist(self):
+    return max(self.allDists())
+
+  def sumDist(self):
+    return sum(self.allDists())
 
   #Desc: Changes the game state to reflect the action given.
-  #Param: action - an 'Action' object
+  #Param: action - a tuple (coord, color)
   #Pre: self.board must be set as a 'Board' object. 
   #     The Action object should be a valid action in the current state.
   def perform(self, action):
