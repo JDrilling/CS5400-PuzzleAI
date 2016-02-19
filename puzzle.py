@@ -136,8 +136,8 @@ def BestFirst_Solve(game, graphSearch = True, astar = False):
 
   states = 1
   evaled = 0
-  curF = root.state.sumDist()
-  secondarySort = root.state.minDist()
+  curF = sum(root.state.curCosts)
+  secondarySort = min(root.state.curCosts)
 
   # Init both frontier data structures...
   heapq.heappush(frontierHeap, (curF, secondarySort, states, root))
@@ -148,8 +148,8 @@ def BestFirst_Solve(game, graphSearch = True, astar = False):
     evaled += 1
 
     # Large Debug Print
-    curNode.state.board.printB()
-    print("")
+    # curNode.state.board.printB()
+    # print("")
     
     if graphSearch:
       frontierSet.remove(curNode)
@@ -173,17 +173,19 @@ def BestFirst_Solve(game, graphSearch = True, astar = False):
 
       # Here we select which heuristic we will use.
       # SecondarySort, is placed 2nd in the tuple used in the heap and is
-      # therefore element considered for ordering in the pfifo if Fn is the 
-      # same.
+      # therefore element considered for ordering in the pfifo if Fn is equal
+      # for two nodes.
       if astar:
-        Fn = newNode.cost + newNode.state.sumDist()
-        secondarySort = newNode.state.minDist()
+        # Gets all manhattan distances.
+        pathCosts = newNode.state.curCosts
+        Fn = newNode.cost + sum(pathCosts)
+        secondarySort = min(pathCosts)
       # If we're not using AStar, we just set secondary Sort to a constant
       # so the heap defaults to the third element in the tuple, which is when
       # the node was created. I.E. for equal Fn's, the algorithem will chose
       # the node that was created first.
       else:
-        Fn = newNode.state.sumDist()
+        Fn = sum(newNode.state.curCosts)
         secondarySort = 0
 
       # Options for graph search and tree search.
@@ -200,13 +202,6 @@ def BestFirst_Solve(game, graphSearch = True, astar = False):
     curNode.state = None
     curNode.cost = None
 
-    #Debugging.
-    '''
-    if priority != curF:
-      curF = priority
-      print("Currently evaluating F = {}".format(curF))
-    '''
-
   print("No solution found! Searched through {} states...".format(states))
   return None
 
@@ -222,7 +217,7 @@ if __name__ == "__main__":
   if len(sys.argv) > 2:
     algo = sys.argv[2]
   else:
-    algo = "gbfgs"
+    algo = "asgs"
 
   try:
     game = ColorConnect.Game(filePath)
@@ -245,9 +240,6 @@ if __name__ == "__main__":
   # breadth first tree
   elif algo.lower() == "bfts":
     sol = BFTS_Solve(game)
-  # A* graph search
-  elif algo.lower() == "asgs":
-    sol = BestFirst_Solve(game, graphSearch=True, astar=True)
   # A* tree search
   elif algo.lower() == "asts":
     sol = BestFirst_Solve(game, graphSearch=False, astar=True)
@@ -255,8 +247,11 @@ if __name__ == "__main__":
   elif algo.lower() == "gbfts":
     sol = BestFirst_Solve(game, graphSearch=False, astar=False)
   # greedy Best first graph
-  else:
+  elif algo.lower() == "gbfgs":
     sol = BestFirst_Solve(game, graphSearch=True, astar=False)
+  # A* graph search
+  else:
+    sol = BestFirst_Solve(game, graphSearch=True, astar=True)
 
   end = datetime.datetime.now()
   delta = end - start

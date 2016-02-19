@@ -3,6 +3,10 @@
 #Implements the game "ColorConnect"
 
 import sys
+import heapq
+
+def manDist(p1, p2):
+  return abs(p1[0] - p2[0]) + abs(p1[1] - p2[1])
 
 #Very basic Class to hold an action in the game, wich is in essence a color
 # and where to place that color
@@ -87,9 +91,12 @@ class Game:
       self.start = None
       self.head = None
       self.end = None
+      self.curCosts = []
 
       if path:
         self.loadFromFile(path)
+
+      self.curCosts = self.allDists()
 
     elif copy is not None:
       #Changed to a shallow copy because the starts don't change
@@ -98,6 +105,7 @@ class Game:
       #Changed to a shallow copy because the end doesn't change
       self.end = copy.end
       self.board = Board(copy=copy.board)
+      self.curCosts = copy.curCosts[:]
 
   def __eq__(self, other):
     if isinstance(other, Game):
@@ -161,8 +169,7 @@ class Game:
 
       movesOnBoard = self.board.getValidMoves(cur)
       for move in movesOnBoard:
-        if self.board.getTile(move) == Board.EMPTY or \
-           (self.end[color] == move and cur != self.start[color]):
+        if self.board.getTile(move) == Board.EMPTY or self.end[color] == move:
           act = (move, color)
           actions.append(act)
 
@@ -172,28 +179,72 @@ class Game:
   def gameOver(self):
     return self.head == self.end
 
+
+  # Astar-Ception
+  # Calculates and returns the actual minimum path cost between the head 
+  # and the end, using AStar.
+  # Returns: the path cost if a path is found,
+  #          4*manDist(head, end) if no path is found for pathcost < 2*manDist(head,end)
+  #          999999 if no path is found
+  def minPath(self, color):
+    from SearchTree import Node
+    start = self.head[color]
+    end = self.end[color]
+
+    states = 1
+    frontierHeap = []
+    frontierSet = set()
+    exploredSet = set()
+
+    root = Node(self.board, start, None, 0)
+
+    heapq.heappush(frontierHeap, (manDist(start,end), states, root))
+    frontierSet.add(root)
+
+    while len(frontierHeap) > 0:
+      priority, trash, node = heapq.heappop(frontierHeap)
+
+      frontierSet.remove(node)
+      exploredSet.add(node)
+
+      if node.action == end:
+        return node.cost
+      elif node.cost >= 2*manDist(node.action, end):
+        return 2*node.cost
+
+      moves = node.state.getValidMoves(node.action)
+      for move in moves:
+        if node.state.getTile(move) == Board.EMPTY or end == move:
+          newBoard = Board(copy=node.state)
+          newBoard.setTile(move, color)
+          newNode = Node(newBoard, move, node, node.cost + 1)
+
+          if (newNode not in exploredSet and newNode not in frontierSet) or move == end:
+            states += 1
+            fn = newNode.cost + manDist(move, end)
+            heapq.heappush(frontierHeap, (fn, states, newNode))
+            frontierSet.add(newNode)
+
+    return 999999
+     
+  # Calculates all the minPaths between colors and the end.
+  # Returns:   a list of the minPaths.
+  def allPaths(self):
+    paths = []
+    for color in range(len(self.start)):
+      cost = self.minPath(color)
+      paths.append(cost)
+    return paths
+
+  # Gets all manhattan distances from the current head to the end.
+  # Returns:  a list of all manDist(head,end)
   def allDists(self):
     dists = []
     for index in range(len(self.start)):
-      dist = abs(self.head[index][0] - self.end[index][0]) +\
-             abs(self.head[index][1] - self.end[index][1])
-
-      if dist == 1 and self.head[index] == self.start[index]:
-          dist = 3
-
+      dist = manDist(self.head[index], self.end[index])
       dists.append(dist)
 
     return dists
-
-
-  def minDist(self):
-    return min(self.allDists())
-
-  def maxDist(self):
-    return max(self.allDists())
-
-  def sumDist(self):
-    return sum(self.allDists())
 
   #Desc: Changes the game state to reflect the action given.
   #Param: action - a tuple (coord, color)
@@ -202,3 +253,5 @@ class Game:
   def perform(self, action):
     self.head[action[1]] = action[0]
     self.board.setTile(action[0], action[1])
+
+    self.curCosts[action[1]] = manDist(action[0], self.end[action[1]])
