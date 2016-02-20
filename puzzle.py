@@ -180,7 +180,7 @@ def BestFirst_Solve(game, graphSearch = True, astar = False):
       # nonzero cost to a goal.
       if astar:
         # Gets all manhattan distances.
-        pathCosts = newNode.state.curCosts
+        pathCosts = newNode.state.allPaths()
         nonZero = [x for x in pathCosts if x != 0]
         Fn = newNode.cost + sum(nonZero)
         unSolved = len(nonZero)

@@ -184,7 +184,7 @@ class Game:
   # Calculates and returns the actual minimum path cost between the head 
   # and the end, using AStar.
   # Returns: the path cost if a path is found,
-  #          4*manDist(head, end) if no path is found for pathcost < 2*manDist(head,end)
+  #          4*manDist(head, end) if no path is found for pathcost < 3*manDist(head,end)
   #          999999 if no path is found
   def minPath(self, color):
     from SearchTree import Node
@@ -209,8 +209,8 @@ class Game:
 
       if node.action == end:
         return node.cost
-      elif node.cost >= 2*manDist(node.action, end):
-        return 2*node.cost
+      elif node.cost >= 3*manDist(start, end):
+        return 3*node.cost
 
       moves = node.state.getValidMoves(node.action)
       for move in moves:
