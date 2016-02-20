@@ -137,14 +137,15 @@ def BestFirst_Solve(game, graphSearch = True, astar = False):
   states = 1
   evaled = 0
   curF = sum(root.state.curCosts)
-  secondarySort = min(root.state.curCosts)
+  unSolved = len(root.state.curCosts) - root.state.curCosts.count(0)
+  minCost = min(root.state.curCosts)
 
   # Init both frontier data structures...
-  heapq.heappush(frontierHeap, (curF, secondarySort, states, root))
+  heapq.heappush(frontierHeap, (curF, unSolved, minCost, states, root))
   frontierSet.add(root)
 
   while len(frontierHeap) > 0:
-    priority, secondSort, stateNum, curNode = heapq.heappop(frontierHeap)
+    priority, unSolved, minCost, stateNum, curNode = heapq.heappop(frontierHeap)
     evaled += 1
 
     # Large Debug Print
@@ -172,31 +173,38 @@ def BestFirst_Solve(game, graphSearch = True, astar = False):
       newNode = Node(newState, action, curNode, curNode.cost + 1)
 
       # Here we select which heuristic we will use.
-      # SecondarySort, is placed 2nd in the tuple used in the heap and is
+      # unSolved, is placed 2nd in the tuple used in the heap and is
       # therefore element considered for ordering in the pfifo if Fn is equal
       # for two nodes.
+      # If the first two are equal, minCost is considered, which is the minimum
+      # nonzero cost to a goal.
       if astar:
         # Gets all manhattan distances.
         pathCosts = newNode.state.curCosts
-        Fn = newNode.cost + sum(pathCosts)
-        secondarySort = min(pathCosts)
-      # If we're not using AStar, we just set secondary Sort to a constant
-      # so the heap defaults to the third element in the tuple, which is when
+        nonZero = [x for x in pathCosts if x != 0]
+        Fn = newNode.cost + sum(nonZero)
+        unSolved = len(nonZero)
+        if len(nonZero) > 0:
+          minCost = min(nonZero)
+        else:
+          minCost = 0
+      # If we're not using AStar, we just set secondary Sorts to constants
+      # so the heap defaults to the fourth element in the tuple, which is when
       # the node was created. I.E. for equal Fn's, the algorithem will chose
       # the node that was created first.
       else:
         Fn = sum(newNode.state.curCosts)
-        secondarySort = 0
+        minCost = unSolved = 0
 
       # Options for graph search and tree search.
       if graphSearch:
         if newNode not in frontierSet and hash(newNode) not in explored:
           states += 1 
           frontierSet.add(newNode)
-          heapq.heappush(frontierHeap, (Fn, secondarySort, states, newNode))
+          heapq.heappush(frontierHeap, (Fn, unSolved, minCost, states, newNode))
       else:
         states += 1 
-        heapq.heappush(frontierHeap, (Fn, secondarySort, states, newNode))
+        heapq.heappush(frontierHeap, (Fn, unSolved, minCost, states, newNode))
 
     # Don't need the game object after it has been evaluated, so let gc take it.
     curNode.state = None
