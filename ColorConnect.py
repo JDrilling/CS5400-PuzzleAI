@@ -5,6 +5,7 @@
 import sys
 import heapq
 
+# Returns the manhattan distance between two points, p1 and p2
 def manDist(p1, p2):
   return abs(p1[0] - p2[0]) + abs(p1[1] - p2[1])
 
@@ -74,6 +75,7 @@ class Board:
   def __hash__(self):
     return hash(tuple(self.area))
 
+  # Prints self.board to the console
   def printB(self):
     for y in range(self.dim):
       out = ""
@@ -83,6 +85,7 @@ class Board:
           space = "e"
         out += "{} ".format(space)
       print(out)
+
 
 class Game:
   def __init__(self, path=None, copy=None):
@@ -95,10 +98,12 @@ class Game:
 
       if path:
         self.loadFromFile(path)
-
+      
+      # self.curCosts holds the cur minimum distances between all colors and
+      # their end tiles
       self.curCosts = self.allDists()
 
-    elif copy is not None:
+    else:
       #Changed to a shallow copy because the starts don't change
       self.start = copy.start
       self.head = list(copy.head) 
@@ -158,7 +163,7 @@ class Game:
     self.board.initMoveSet()
 
   #Desc: determines wich actions can be performed in this game state.
-  #Returns: a list of 'Action' objects that represent valid changes to this
+  #Returns: a list of (coord, color) tuples that represent valid changes to this
   # game state.
   def getAllActions(self):
     actions = []
@@ -181,11 +186,13 @@ class Game:
 
 
   # Astar-Ception
-  # Calculates and returns the actual minimum path cost between the head 
-  # and the end, using AStar.
-  # Returns: the path cost if a path is found,
-  #          4*manDist(head, end) if no path is found for pathcost < 3*manDist(head,end)
-  #          999999 if no path is found
+  # Calculates and returns the minimum path distance between the head 
+  # and the end, using AStar. If this search reaches certain depth, it returns
+  # early so that it doesn't spend a large amount of time looking for a path
+  # that does not exist.
+  # Returns: the path cost, if a path is found,
+  #          4*manDist(head, end), if no path is found for pathcost < 3*manDist(head,end)
+  #          999999, if no path is found
   def minPath(self, color):
     from SearchTree import Node
     start = self.head[color]
@@ -254,4 +261,5 @@ class Game:
     self.head[action[1]] = action[0]
     self.board.setTile(action[0], action[1])
 
+    # Update the manhattan distance for that color
     self.curCosts[action[1]] = manDist(action[0], self.end[action[1]])

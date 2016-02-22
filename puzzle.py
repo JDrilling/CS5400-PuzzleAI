@@ -147,10 +147,6 @@ def BestFirst_Solve(game, graphSearch = True, astar = False):
   while len(frontierHeap) > 0:
     priority, unSolved, minCost, stateNum, curNode = heapq.heappop(frontierHeap)
     evaled += 1
-
-    # Large Debug Print
-    # curNode.state.board.printB()
-    # print("")
     
     if graphSearch:
       frontierSet.remove(curNode)
@@ -172,14 +168,14 @@ def BestFirst_Solve(game, graphSearch = True, astar = False):
       newState.perform(action)
       newNode = Node(newState, action, curNode, curNode.cost + 1)
 
-      # Here we select which heuristic we will use.
+      # Here we select which heuristic we will use. Astar or simple greedy.
       # unSolved, is placed 2nd in the tuple used in the heap and is
       # therefore element considered for ordering in the pfifo if Fn is equal
       # for two nodes.
       # If the first two are equal, minCost is considered, which is the minimum
       # nonzero cost to a goal.
       if astar:
-        # Gets all manhattan distances.
+        # Gets all minimum path distances between the colors and the end tiles.
         pathCosts = newNode.state.allPaths()
         nonZero = [x for x in pathCosts if x != 0]
         Fn = newNode.cost + sum(nonZero)
@@ -188,12 +184,12 @@ def BestFirst_Solve(game, graphSearch = True, astar = False):
           minCost = min(nonZero)
         else:
           minCost = 0
-      # If we're not using AStar, we just set secondary Sorts to constants
+      # If we're not using AStar, we just set secondary sort vars to constants
       # so the heap defaults to the fourth element in the tuple, which is when
       # the node was created. I.E. for equal Fn's, the algorithem will chose
       # the node that was created first.
       else:
-        Fn = sum(newNode.state.curCosts)
+        Fn = sum(newNode.state.allPaths())
         minCost = unSolved = 0
 
       # Options for graph search and tree search.
@@ -224,6 +220,7 @@ if __name__ == "__main__":
   # Arg[2] chooses algorithm to use
   if len(sys.argv) > 2:
     algo = sys.argv[2]
+  # Defaults to A*GS
   else:
     algo = "asgs"
 
@@ -232,13 +229,6 @@ if __name__ == "__main__":
   except err:
     print(err)
     sys.exit()
-
-  #Debugging
-  '''
-  print("Color starting spaces are: {}".format(game.start))
-  print("Color heads are at: {}".format(game.head))
-  print("Color ending spaces are: {}".format(game.end))
-  '''
 
   start = datetime.datetime.now()
 
